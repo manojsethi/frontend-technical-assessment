@@ -1,11 +1,464 @@
 /* Base styles */
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --text-color: #333333;
+  --border-color: #dddddd;
+  --light-gray: #f8f9fa;
+  --white: #ffffff;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  background-color: var(--white);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* Navigation Styles */
+header {
+  background-color: var(--primary-color);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  box-shadow: var(--shadow);
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  margin: 0 0.5rem;
+  border-radius: 0;
+  transition: background-color 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  background-color: var(--secondary-color);
+  color: var(--white);
+}
+
+/* Main Content */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 20px;
+  /* padding: 2rem; */
+}
+
+.content-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: var(--text-color);
+}
+
+#list-section {
+  position: relative;
+}
+
+#drag-section {
+  position: relative;
+}
+
+/* Navigation Section Styles */
+.section-description {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.instruction-box {
+  background-color: var(--light-gray);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-box p {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+/* Drag & Drop Styles */
+.drag-drop-container {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.draggable-list {
+  margin-bottom: 2rem;
+}
+
+.draggable-item {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.draggable-item:hover {
+  border-color: var(--secondary-color);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.1);
+}
+
+.draggable-item:active {
+  cursor: grabbing;
+}
+
+.draggable-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.item-content {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.drag-handle {
+  color: #999;
+  font-size: 1.2rem;
+  cursor: grab;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+  color: var(--secondary-color);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Drop Zones */
+.drop-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.drop-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  background-color: var(--light-gray);
+  transition: all 0.3s ease;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-zone.drag-over {
+  border-color: var(--secondary-color);
+  background-color: rgba(52, 152, 219, 0.05);
+  border-style: solid;
+}
+
+.drop-zone-label {
+  color: #666;
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.drop-zone.drag-over .drop-zone-label {
+  color: var(--secondary-color);
+}
+
+/* Blog List Styles */
+.blog-list-container {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.blog-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sort-select,
+.filter-select,
+.search-input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: var(--white);
+  color: var(--text-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.sort-select,
+.filter-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.sort-select:hover,
+.filter-select:hover,
+.search-input:hover {
+  border-color: var(--secondary-color);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.1);
+}
+
+.sort-select:focus,
+.filter-select:focus,
+.search-input:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.search-input {
+  flex: 0.8;
+  min-width: 150px;
+  max-width: 230px;
+}
+
+.loading-indicator,
+.error-container {
+  text-align: center;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.loading-indicator {
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.error-container {
+  color: #e74c3c;
+  background-color: #fdf2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--border-radius);
+}
+
+.hidden {
+  display: none;
+}
+
+.blog-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--white);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.blog-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.blog-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.blog-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+.blog-meta {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.blog-author {
+  font-weight: 500;
+}
+
+.blog-date {
+  font-weight: 400;
+}
+
+.blog-reading-time {
+  font-weight: 400;
+}
+
+.blog-excerpt {
+  color: var(--text-color);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.blog-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background-color: var(--secondary-color);
+  color: var(--white);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+}
+.content-section {
+  height: 82vh;
+}
+
+#navigation {
+  position: relative;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+
+  .content-section h2 {
+    font-size: 2rem;
+  }
+
+  .drag-drop-container,
+  .blog-list-container {
+    padding: 1.5rem;
+  }
+
+  .drop-zones {
+    grid-template-columns: 1fr;
+  }
+
+  .blog-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    min-width: auto;
+  }
+
+  .blog-item {
+    flex-direction: column;
+  }
+
+  .blog-image {
+    width: 100%;
+    height: 180px;
+  }
+
+  nav {
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-link {
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-section h2 {
+    font-size: 1.75rem;
+  }
+
+  .drag-drop-container,
+  .blog-list-container {
+    padding: 1rem;
+  }
+
+  .draggable-item {
+    padding: 0.75rem;
+  }
+
+  .drop-zone {
+    padding: 1.5rem;
+  }
 }
