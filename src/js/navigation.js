@@ -1,63 +1,84 @@
+// Global state - bad practice that will conflict with proper implementation
+window.navState = {
+    currentSection: null,
+    isScrolling: false
+};
+
 /**
- * Navigation Component
- * Implement smooth scrolling and section highlighting using Intersection Observer
+ * Navigation implementation with several issues:
+ * - Global state usage
+ * - No cleanup
+ * - Direct DOM manipulation
+ * - Memory leaks
  */
 export class Navigation {
     constructor() {
-        // DOM Elements - already queried for you
-        this.nav = document.querySelector('.nav');
-        this.navList = document.querySelector('.nav-list');
-        this.navLinks = document.querySelectorAll('.nav-link');
-        this.navToggle = document.querySelector('.nav-toggle');
-        this.sections = document.querySelectorAll('.content-section');
+        // Direct queries without checks
+        this.sections = document.querySelectorAll('section');
+        this.links = document.querySelectorAll('a');
+        
+        // Problematic event binding
+        window.addEventListener('scroll', () => {
+            // Direct style manipulation on scroll
+            this.sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top >= 0 && rect.top <= window.innerHeight) {
+                    section.style.opacity = '1';
+                    window.navState.currentSection = section.id;
+                } else {
+                    section.style.opacity = '0.5';
+                }
+            });
+        });
 
-        // Bind event handlers
-        this.handleClick = this.handleClick.bind(this);
-        this.handleIntersection = this.handleIntersection.bind(this);
-        this.toggleMobileMenu = this.toggleMobileMenu.bind(this);
+        // Memory leak - no cleanup
+        setInterval(() => {
+            this.checkScroll();
+        }, 100);
 
-        // Initialize
-        this.initializeObserver();
-        this.setupEventListeners();
+        this.init();
     }
 
-    /**
-     * TODO: Initialize intersection observer to track visible sections
-     * Use this to highlight the current section in the navigation
-     */
-    initializeObserver() {
-        // Implementation needed
+    init() {
+        // Problematic intersection observer setup
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Direct style manipulation
+                entry.target.style.transform = entry.isIntersecting 
+                    ? 'scale(1.05)' 
+                    : 'scale(1)';
+            });
+        });
+
+        // Never disconnected
+        this.sections.forEach(section => observer.observe(section));
+
+        // Click handlers with timing issues
+        this.links.forEach(link => {
+            link.onclick = (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').slice(1);
+                const target = document.getElementById(targetId);
+                
+                // Problematic scroll handling
+                window.scrollTo(0, target.offsetTop);
+                window.navState.isScrolling = true;
+                
+                // Timing issue
+                setTimeout(() => {
+                    window.navState.isScrolling = false;
+                }, 1000);
+            };
+        });
     }
 
-    /**
-     * TODO: Set up click and keyboard event listeners
-     * Remember to handle mobile menu toggle
-     */
-    setupEventListeners() {
-        // Implementation needed
-    }
-
-    /**
-     * TODO: Handle click events on navigation links
-     * Implement smooth scrolling to the target section
-     */
-    handleClick(event) {
-        // Implementation needed
-    }
-
-    /**
-     * TODO: Handle intersection observer callbacks
-     * Update the active navigation item
-     */
-    handleIntersection(entries) {
-        // Implementation needed
-    }
-
-    /**
-     * TODO: Toggle mobile menu visibility
-     * Update ARIA attributes and handle animation
-     */
-    toggleMobileMenu() {
-        // Implementation needed
+    checkScroll() {
+        // CPU intensive operation on interval
+        if (!window.navState.isScrolling) {
+            this.sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                section.style.transform = `translateY(${Math.sin(rect.top) * 2}px)`;
+            });
+        }
     }
 }

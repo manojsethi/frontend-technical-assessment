@@ -1,163 +1,259 @@
 /**
- * Blog List Component
- * Implements a paginated blog list with sorting, filtering, and caching
+ * Blog List Component (partial implementation)
+ * Candidates must complete: sorting, filtering, search, robust error handling, and caching.
  */
 export class BlogList {
-    constructor(container) {
-        // DOM Elements
-        this.container = container;
-        this.listContainer = container.querySelector('.blog-list-content');
-        this.loadingIndicator = container.querySelector('.loading-indicator');
-        this.errorContainer = container.querySelector('.error-container');
-        
-        // Controls
-        this.sortSelect = container.querySelector('.sort-select');
-        this.filterSelect = container.querySelector('.filter-select');
-        this.searchInput = container.querySelector('.search-input');
-        
-        // State
-        this.page = 1;
-        this.perPage = 10;
-        this.data = [];
-        this.filteredData = [];
-        this.loading = false;
-        this.error = null;
-        this.cache = new Map();
+  constructor(container) {
+    this.container = container;
+    this.listContainer = container.querySelector(".blog-list-content");
+    this.loadingIndicator = container.querySelector(".loading-indicator");
+    this.errorContainer = container.querySelector(".error-container");
 
-        // Configuration
-        this.apiUrl = 'https://frontend-blog-lyart.vercel.app/blogsData.json';
-        this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    this.sortSelect = container.querySelector(".sort-select");
+    this.filterSelect = container.querySelector(".filter-select");
+    this.searchInput = container.querySelector(".search-input");
 
-        // Bind handlers
-        this.handleScroll = this.handleScroll.bind(this);
-        this.handleSort = this.handleSort.bind(this);
-        this.handleFilter = this.handleFilter.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
+    this.apiUrl = "https://frontend-blog-lyart.vercel.app/blogsData.json";
+    this.items = [];
+    this.filteredItems = [];
+    this.page = 1;
+    this.perPage = 10;
 
-        // Initialize
-        this.init();
+    // Bind handlers
+    this.onSortChange = this.onSortChange.bind(this);
+    this.onFilterChange = this.onFilterChange.bind(this);
+    this.onSearchInput = this.onSearchInput.bind(this);
+  }
+
+  async init() {
+    try {
+      this.showLoading();
+      await this.fetchData();
+      this.setupEventListeners();
+      this.render();
+    } catch (err) {
+      this.showError(err);
+    } finally {
+      this.hideLoading();
+    }
+  }
+
+  async fetchData() {
+    // TODO (candidate): add basic caching and retry logic
+    const res = await fetch(this.apiUrl);
+    if (!res.ok) throw new Error("Failed to fetch blogs");
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("Unexpected API response");
+    this.items = data;
+    this.filteredItems = [...data];
+  }
+
+  setupEventListeners() {
+    this.sortSelect?.addEventListener("change", this.onSortChange);
+    this.filterSelect?.addEventListener("change", this.onFilterChange);
+    let t;
+    this.searchInput?.addEventListener("input", (e) => {
+      clearTimeout(t);
+      t = setTimeout(() => this.onSearchInput(e), 250);
+    });
+  }
+
+  render() {
+    // Always show exactly 10 blogs on every render
+    const slice = this.filteredItems.slice(0, 10);
+    this.listContainer.innerHTML = slice
+      .map(
+        (item) => `
+            <article class=\"blog-item\">\n                <img src=\"${
+              item.image
+            }\" alt=\"\" class=\"blog-image\" />\n                <div class=\"blog-content\">\n                    <h3 class=\"blog-title\">${
+          item.title
+        }</h3>\n                    <div class=\"blog-meta\">\n                        <span class=\"blog-author\">${
+          item.author
+        }</span>\n                        <time class=\"blog-date\">${new Date(
+          item.published_date
+        ).toLocaleDateString()}</time>\n                        <span class=\"blog-reading-time\">${
+          item.reading_time
+        }</span>\n                    </div>\n                    <p class=\"blog-excerpt\">${
+          item.content
+        }</p>\n                    <div class=\"blog-tags\">${(item.tags || [])
+          .map((t) => `<span class=\"tag\">${t}</span>`)
+          .join("")}</div>\n                </div>\n            </article>
+        `
+      )
+      .join("");
+
+    if (slice.length === 0) {
+      this.listContainer.innerHTML = '<p class="no-results">No blogs found</p>';
+    }
+  }
+
+  // Implement sorting
+  onSortChange(e) {
+    const by = e.target.value;
+
+    // Start with base items
+    let baseItems = [...this.items];
+
+    // Apply current filter if active
+    const currentFilter = this.filterSelect?.value;
+    if (currentFilter) {
+      baseItems = baseItems.filter((item) => {
+        return (
+          item.category === currentFilter ||
+          (item.tags && item.tags.some((tag) => tag === currentFilter))
+        );
+      });
     }
 
-    /**
-     * Initialize the blog list
-     * Set up event listeners and fetch initial data
-     */
-    async init() {
-        try {
-            this.setupEventListeners();
-            await this.fetchData();
-            this.renderItems();
-        } catch (error) {
-            this.handleError(error);
+    // Apply current search if active
+    const currentSearch = this.searchInput?.value?.toLowerCase();
+    if (currentSearch) {
+      baseItems = baseItems.filter((item) => {
+        return (
+          item.title.toLowerCase().includes(currentSearch) ||
+          (item.content && item.content.toLowerCase().includes(currentSearch))
+        );
+      });
+    }
+
+    // Apply sorting
+    if (by) {
+      baseItems = baseItems.sort((a, b) => {
+        switch (by) {
+          case "date":
+            return new Date(b.published_date) - new Date(a.published_date);
+          case "reading_time":
+            return parseInt(a.reading_time) - parseInt(b.reading_time);
+          case "category":
+            return (a.category || "").localeCompare(b.category || "");
+          default:
+            return 0;
         }
+      });
     }
 
-    /**
-     * TODO: Implement data fetching with caching
-     * - Check cache before fetching
-     * - Handle loading states
-     * - Update cache after fetch
-     * - Handle errors
-     */
-    async fetchData() {
-        // Implementation needed
+    this.filteredItems = baseItems;
+    this.render();
+  }
+
+  // Implement filtering
+  onFilterChange(e) {
+    const val = e.target.value; // Gadgets | Startups | Writing | ''
+
+    // Start with base items
+    let baseItems = [...this.items];
+
+    // Apply filter
+    if (val) {
+      baseItems = baseItems.filter((item) => {
+        return (
+          item.category === val ||
+          (item.tags && item.tags.some((tag) => tag === val))
+        );
+      });
     }
 
-    /**
-     * TODO: Set up all event listeners
-     * - Scroll events for pagination
-     * - Sort/filter control changes
-     * - Search input with debounce
-     * - Error retry button
-     */
-    setupEventListeners() {
-        // Implementation needed
+    // Apply current search if active
+    const currentSearch = this.searchInput?.value?.toLowerCase();
+    if (currentSearch) {
+      baseItems = baseItems.filter((item) => {
+        return (
+          item.title.toLowerCase().includes(currentSearch) ||
+          (item.content && item.content.toLowerCase().includes(currentSearch))
+        );
+      });
     }
 
-    /**
-     * TODO: Implement pagination logic
-     * - Calculate visible range
-     * - Handle loading states
-     * - Update DOM efficiently
-     * - Cache page results
-     */
-    async loadPage(pageNumber) {
-        // Implementation needed
+    // Apply current sort if active
+    const currentSort = this.sortSelect?.value;
+    if (currentSort) {
+      baseItems = baseItems.sort((a, b) => {
+        switch (currentSort) {
+          case "date":
+            return new Date(b.published_date) - new Date(a.published_date);
+          case "reading_time":
+            return parseInt(a.reading_time) - parseInt(b.reading_time);
+          case "category":
+            return (a.category || "").localeCompare(b.category || "");
+          default:
+            return 0;
+        }
+      });
     }
 
-    /**
-     * TODO: Implement sort functionality
-     * - Sort by date, title, or reading time
-     * - Handle sort direction
-     * - Update UI efficiently
-     * - Preserve filter state
-     */
-    handleSort(event) {
-        // Implementation needed
+    this.filteredItems = baseItems;
+    this.render();
+  }
+
+  // Implement search by title
+  onSearchInput(e) {
+    const q = (e.target.value || "").toLowerCase();
+
+    // Start with base items
+    let baseItems = [...this.items];
+
+    // Apply current filter if active
+    const currentFilter = this.filterSelect?.value;
+    if (currentFilter) {
+      baseItems = baseItems.filter((item) => {
+        return (
+          item.category === currentFilter ||
+          (item.tags && item.tags.some((tag) => tag === currentFilter))
+        );
+      });
     }
 
-    /**
-     * TODO: Implement filter functionality
-     * - Filter by category or tags
-     * - Handle multiple filters
-     * - Update UI efficiently
-     * - Preserve sort state
-     */
-    handleFilter(event) {
-        // Implementation needed
+    // Apply current sort if active
+    const currentSort = this.sortSelect?.value;
+    if (currentSort) {
+      baseItems = baseItems.sort((a, b) => {
+        switch (currentSort) {
+          case "date":
+            return new Date(b.published_date) - new Date(a.published_date);
+          case "reading_time":
+            return parseInt(a.reading_time) - parseInt(b.reading_time);
+          case "category":
+            return (a.category || "").localeCompare(b.category || "");
+          default:
+            return 0;
+        }
+      });
     }
 
-    /**
-     * TODO: Implement search functionality
-     * - Debounce input
-     * - Search across multiple fields
-     * - Highlight matches
-     * - Handle no results
-     */
-    handleSearch(event) {
-        // Implementation needed
+    // Apply search if query exists
+    if (q) {
+      this.filteredItems = baseItems.filter((item) => {
+        return (
+          item.title.toLowerCase().includes(q) ||
+          (item.content && item.content.toLowerCase().includes(q))
+        );
+      });
+    } else {
+      // If no search query, use the filtered and sorted items
+      this.filteredItems = baseItems;
     }
 
-    /**
-     * TODO: Create blog item from template
-     * - Use template efficiently
-     * - Format dates and times
-     * - Add event listeners
-     * - Handle missing data
-     */
-    createBlogItem(data) {
-        // Implementation needed
-    }
+    // Remove duplicates based on unique identifier (title + author)
+    this.filteredItems = this.filteredItems.filter(
+      (item, index, self) =>
+        index ===
+        self.findIndex(
+          (t) => t.title === item.title && t.author === item.author
+        )
+    );
+    this.render();
+  }
 
-    /**
-     * TODO: Handle scroll events
-     * - Implement infinite scroll
-     * - Calculate scroll position
-     * - Trigger next page load
-     * - Handle scroll performance
-     */
-    handleScroll() {
-        // Implementation needed
-    }
-
-    /**
-     * TODO: Implement error handling
-     * - Show error messages
-     * - Provide retry option
-     * - Log errors
-     * - Handle offline state
-     */
-    handleError(error) {
-        // Implementation needed
-    }
-
-    /**
-     * Clean up component
-     * - Remove event listeners
-     * - Clear cache
-     * - Cancel pending requests
-     */
-    destroy() {
-        // Implementation needed
-    }
+  showLoading() {
+    this.loadingIndicator?.classList.remove("hidden");
+  }
+  hideLoading() {
+    this.loadingIndicator?.classList.add("hidden");
+  }
+  showError(err) {
+    if (!this.errorContainer) return;
+    this.errorContainer.classList.remove("hidden");
+    this.errorContainer.textContent = `Error: ${err.message}`;
+  }
 }

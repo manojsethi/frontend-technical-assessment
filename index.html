@@ -1,30 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frontend Technical Assessment</title>
+    <title>Frontend Assessment</title>
     <link rel="stylesheet" href="src/css/styles.css">
 </head>
+
 <body>
-    <header>
-        <nav class="nav">
-            <button class="nav-toggle">
-                <span class="hamburger"></span>
-            </button>
-            <ul id="nav-list" class="nav-list">
-                <li><a href="#nav-section" class="nav-link">Navigation</a></li>
-                <li><a href="#drag-section" class="nav-link">Drag & Drop</a></li>
-                <li><a href="#list-section" class="nav-link">Blog List</a></li>
-            </ul>
+    <header role="banner">
+        <nav role="navigation" aria-label="Main navigation">
+            <a href="#navigation" 
+               class="nav-link active" 
+               role="menuitem" 
+               aria-current="page"
+               tabindex="0"
+               aria-describedby="nav-navigation-desc">Navigation</a>
+            <a href="#drag-section" 
+               class="nav-link" 
+               role="menuitem"
+               tabindex="0"
+               aria-describedby="nav-drag-desc">Drag & Drop</a>
+            <a href="#list-section" 
+               class="nav-link" 
+               role="menuitem"
+               tabindex="0"
+               aria-describedby="nav-list-desc">Blog List</a>
+            <button class="mobile-menu-toggle" 
+                    aria-label="Toggle mobile menu" 
+                    aria-expanded="false"
+                    aria-controls="main-navigation"
+                    tabindex="0">☰</button>
+            <!-- Screen reader descriptions -->
+            <span id="nav-navigation-desc" class="sr-only">Navigate to the navigation component section</span>
+            <span id="nav-drag-desc" class="sr-only">Navigate to the drag and drop demo section</span>
+            <span id="nav-list-desc" class="sr-only">Navigate to the blog list section</span>
         </nav>
     </header>
-
     <main>
-        <section id="nav-section" class="content-section">
+        <section id="navigation" class="content-section">
             <h2>Navigation Component</h2>
-            <p>This section demonstrates the sticky navigation with IntersectionObserver.</p>
-            <div class="demo-content">
+            <p class="section-description">This section demonstrates the sticky navigation with IntersectionObserver.</p>
+            <div class="instruction-box">
                 <p>Scroll to see the navigation update and highlight the current section.</p>
             </div>
         </section>
@@ -83,7 +101,7 @@
             </div>
         </section>
     </main>
-
     <script type="module" src="src/js/main.js"></script>
 </body>
+
 </html>
