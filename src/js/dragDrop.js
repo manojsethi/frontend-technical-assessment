@@ -1,58 +1,84 @@
-// This implementation has issues with event handling and touch support
 export class DragDrop {
     constructor() {
-        // Global variables - problematic
-        window.dragState = {
-            isDragging: false,
-            currentItem: null
-        };
-        
-        // Incorrect DOM queries
-        this.items = Array.from(document.getElementsByClassName('draggable-item'));
-        this.dropZones = Array.from(document.getElementsByClassName('drop-zone'));
-        
-        // Direct mutation of classList - performance issue
-        setInterval(() => {
-            this.items.forEach(item => {
-                if (window.dragState.isDragging) {
-                    item.classList.add('dragging');
-                } else {
-                    item.classList.remove('dragging');
-                }
-            });
-        }, 100);
+        this.draggedItem = null;
+        this.items = [];
+        this.dropZones = [];
     }
 
     init() {
-        // Missing error handling
-        this.items.forEach(item => {
-            // Incorrect event binding
-            item.ondragstart = () => {
-                window.dragState.isDragging = true;
-                window.dragState.currentItem = item;
-            };
-            
-            // Missing touch events
-            item.ondragend = () => {
-                window.dragState.isDragging = false;
-                window.dragState.currentItem = null;
-            };
-        });
+        this.items = Array.from(document.querySelectorAll('.draggable-item'));
+        this.dropZones = Array.from(document.querySelectorAll('.drop-zone'));
+        
+        if (this.items.length === 0 || this.dropZones.length === 0) {
+            console.warn('Drag and drop elements not found');
+            return;
+        }
 
-        // Event listener memory leak
+        this.setupDragEvents();
+        this.setupDropEvents();
+    }
+
+    setupDragEvents() {
+        this.items.forEach(item => {
+            item.draggable = true;
+            
+            item.addEventListener('dragstart', (e) => {
+                this.draggedItem = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', item.outerHTML);
+            });
+
+            item.addEventListener('dragend', (e) => {
+                item.classList.remove('dragging');
+                this.draggedItem = null;
+                // Remove drag-over class from all drop zones
+                this.dropZones.forEach(zone => {
+                    zone.classList.remove('drag-over');
+                });
+            });
+        });
+    }
+
+    setupDropEvents() {
         this.dropZones.forEach(zone => {
             zone.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                // Direct style manipulation
-                zone.style.backgroundColor = '#f0f0f0';
+                e.dataTransfer.dropEffect = 'move';
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                // Only remove drag-over if we're actually leaving the drop zone
+                if (!zone.contains(e.relatedTarget)) {
+                    zone.classList.remove('drag-over');
+                }
             });
 
             zone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                // Unsafe DOM manipulation
-                if (window.dragState.currentItem) {
-                    zone.innerHTML += window.dragState.currentItem.outerHTML;
-                    window.dragState.currentItem.remove();
+                zone.classList.remove('drag-over');
+                
+                if (this.draggedItem) {
+                    // Clone the dragged item and add it to the drop zone
+                    const clonedItem = this.draggedItem.cloneNode(true);
+                    clonedItem.classList.remove('dragging');
+                    
+                    // Remove the original item from its current location
+                    this.draggedItem.remove();
+                    
+                    // Add the cloned item to the drop zone
+                    zone.appendChild(clonedItem);
+                    
+                    // Update the items array to include the new item
+                    this.items = Array.from(document.querySelectorAll('.draggable-item'));
+                    this.setupDragEvents(); // Re-setup events for the new item
                 }
             });
         });
